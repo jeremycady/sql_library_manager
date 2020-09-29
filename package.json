@@ -1,0 +1,27 @@
+{
+  "name": "sql_library_manager",
+  "version": "1.0.0",
+  "description": "A library manager using SQL",
+  "main": "app.js",
+  "scripts": {
+    "start": "npm app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeremycady/sql_library_manager.git"
+  },
+  "author": "Jeremy Cady",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jeremycady/sql_library_manager/issues"
+  },
+  "homepage": "https://github.com/jeremycady/sql_library_manager#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "pug": "^3.0.0",
+    "sequelize": "^6.3.5",
+    "sequelize-cli": "^6.2.0",
+    "sqlite3": "^5.0.0"
+  }
+}
