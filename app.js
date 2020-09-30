@@ -31,8 +31,9 @@ app.get('/',(req, res) => {
 });
 
 // Shows the full list of books
-app.get('/books', (req, res) => {
-  res.render('index');
+app.get('/books', async (req, res) => {
+  const books = await Book.findAll();
+  res.render('index', { books });
 }); 
 
 app.get('/books/new'); // Shows the create new book form
