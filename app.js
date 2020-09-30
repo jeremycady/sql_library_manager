@@ -1,9 +1,9 @@
-var createError = require('http-errors');
+// var createError = require('http-errors');
 var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-const pug = require('pug');
+// var path = require('path');
+// var cookieParser = require('cookie-parser');
+// var logger = require('morgan');
+// const pug = require('pug');
 const { sequelize, Book } = require('./models');
 
 var app = express();
@@ -12,10 +12,10 @@ var app = express();
 // app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-app.use(logger('dev'));
+// app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+// app.use(cookieParser());
 
 // set static server
 app.use('/static', express.static('public'));
@@ -112,17 +112,16 @@ app.get('/json', async (req, res) => {
   res.json(books);
 });
 
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+app.use((req, res, next) => {
+  const err = new Error('Page not Found');
+  err.status = 404;
+  next(err);
 });
 
 // error handler
 app.use(function(err, req, res, next) {
   if (err.status === 404) {
-    console.log(`${err.status}: ${err.message}`);
-    // return res.render('page-not-found', { err });
+    return res.render('page-not-found');
   } else {
     err.status = 500;
     // err.message = 'There was an error on the server';
@@ -130,15 +129,5 @@ app.use(function(err, req, res, next) {
     // return res.render('error', { err });
   }
 });
-
-(async () => {
-  console.log('Testing the connection to the database...');
-  try {
-    await sequelize.authenticate();
-    console.log('Connection has been established successfully.');
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  }
-})();
 
 module.exports = app;
