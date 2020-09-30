@@ -1,21 +1,13 @@
-// var createError = require('http-errors');
-var express = require('express');
-// var path = require('path');
-// var cookieParser = require('cookie-parser');
-// var logger = require('morgan');
-// const pug = require('pug');
+const express = require('express');
 const { sequelize, Book } = require('./models');
 
-var app = express();
+const app = express();
 
-// view engine setup
-// app.set('views', path.join(__dirname, 'views'));
+// set view engine to PUG
 app.set('view engine', 'pug');
 
-// app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-// app.use(cookieParser());
 
 // set static server
 app.use('/static', express.static('public'));
@@ -123,10 +115,8 @@ app.use(function(err, req, res, next) {
   if (err.status === 404) {
     return res.render('page-not-found');
   } else {
-    err.status = 500;
-    // err.message = 'There was an error on the server';
-    console.log(`${err.status}: ${err.message}`);
-    // return res.render('error', { err });
+    console.log('Error not working');
+    return res.render('error', { error: err });
   }
 });
 
