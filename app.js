@@ -17,8 +17,9 @@ function asyncHandler(cb){
   return async(req, res, next) => {
     try {
       await cb(req, res, next)
-    } catch(error){
-      res.status(500).send(error);
+    } catch(error) {
+      console.log(error);
+      res.status(500).render('error', { errors: error});
     }
   }
 }
@@ -31,6 +32,7 @@ app.get('/', (req, res) => {
 // Shows the full list of books
 app.get('/books', asyncHandler(async (req, res) => {
   const books = await Book.findAll();
+  
   res.render('index', { books });
 })); 
 
@@ -87,7 +89,7 @@ app.post('/books/:id', asyncHandler(async (req, res) => {
   }
 }));
 
-// Deletes a book.
+// Deletes a book
 app.post('/books/:id/delete', asyncHandler(async (req, res) => {
   const book = await Book.findByPk(req.params.id);
 
@@ -98,6 +100,16 @@ app.post('/books/:id/delete', asyncHandler(async (req, res) => {
     res.sendStatus(404);
   }
 }));
+
+// Custom error route
+app.get('/error', (req, res) => {
+  console.log('Custom error route called');
+
+  const err = new Error();
+  err.message = 'Custom 500 error thrown';
+  err.status = 500;
+  throw err;
+});
 
 app.get('/json', async (req, res) => {
   const books = await Book.findAll();
@@ -113,10 +125,10 @@ app.use((req, res, next) => {
 // error handler
 app.use(function(err, req, res, next) {
   if (err.status === 404) {
-    return res.render('page-not-found');
+    res.status(404).render('page-not-found');
   } else {
     console.log('Error not working');
-    return res.render('error', { error: err });
+    res.status(505).render('error', { error: err });
   }
 });
 
