@@ -25,22 +25,44 @@ app.use(express.static(path.join(__dirname, 'public')));
 // set static server
 app.use('/static', express.static('public'));
 
+/* Handler function to wrap each route. */
+function asyncHandler(cb){
+  return async(req, res, next) => {
+    try {
+      await cb(req, res, next)
+    } catch(error){
+      res.status(500).send(error);
+    }
+  }
+}
+
 // redirects HOME to /books
-app.get('/',(req, res) => {
+app.get('/', (req, res) => {
   res.redirect('/books');
 });
 
 // Shows the full list of books
-app.get('/books', async (req, res) => {
+app.get('/books', asyncHandler(async (req, res) => {
   const books = await Book.findAll();
   res.render('index', { books });
-}); 
+})); 
 
 app.get('/books/new'); // Shows the create new book form
-app.post('books/new');  // Posts a new book to the database
-app.get('books/:id'); // Shows book detail form
-app.post('books/:id'); // Updates book info in the database
-app.post('books/:id/delete');  // Deletes a book. Careful, this can’t be undone. It can be helpful to create a new “test” book to test deleting.
+app.post('/books/new');  // Posts a new book to the database
+
+// Shows book detail form
+app.get('/books/:id', asyncHandler( async (req, res) => {
+  const book = await Book.findByPk(req.params.id);
+  
+  if (book) {
+    res.render('update-book', { book });
+  } else {
+    res.sendStatus(404);
+  }
+})); 
+
+app.post('/books/:id'); // Updates book info in the database
+app.post('/books/:id/delete');  // Deletes a book. Careful, this can’t be undone. It can be helpful to create a new “test” book to test deleting.
 
 app.get('/json', async (req, res) => {
   const books = await Book.findAll();
