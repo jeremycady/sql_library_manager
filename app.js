@@ -8,6 +8,7 @@ const { sequelize, Book } = require('./models');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+const { post } = require('./routes/index');
 
 var app = express();
 
@@ -21,13 +22,25 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// set static server
+app.use('/static', express.static('public'));
+
 // app.use('/', indexRouter);
+// app.use('/users', usersRouter);
 
 app.get('/', async (req, res) => {
   const books = await Book.findAll();
   res.json(books);
 });
-app.use('/users', usersRouter);
+
+app.get('/'); // Home route should redirect to the /books route
+app.get('/books'); // Shows the full list of books
+app.get('/books/new'); // Shows the create new book form
+app.post('books/new');  // Posts a new book to the database
+app.get('books/:id'); // Shows book detail form
+app.post('books/:id'); // Updates book info in the database
+post.post('books/:id/delete');  // Deletes a book. Careful, this can’t be undone. It can be helpful to create a new “test” book to test deleting.
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -36,13 +49,15 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+  if (err.status === 404) {
+    console.log(`${err.status}: ${err.message}`);
+    // return res.render('page-not-found', { err });
+  } else {
+    err.status = 500;
+    err.message = 'There was an error on the server';
+    console.log(`${err.status}: ${err.message}`);
+    // return res.render('error', { err });
+  }
 });
 
 (async () => {
