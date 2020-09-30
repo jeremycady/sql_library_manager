@@ -66,7 +66,7 @@ app.post('/books/new', asyncHandler(async (req, res) => {
 // Shows book detail form
 app.get('/books/:id', asyncHandler( async (req, res) => {
   const book = await Book.findByPk(req.params.id);
-  
+
   if (book) {
     res.render('update-book', { book });
   } else {
@@ -74,8 +74,38 @@ app.get('/books/:id', asyncHandler( async (req, res) => {
   }
 })); 
 
-app.post('/books/:id'); // Updates book info in the database
-app.post('/books/:id/delete');  // Deletes a book. Careful, this can’t be undone. It can be helpful to create a new “test” book to test deleting.
+// Updates book info in the database
+app.post('/books/:id', asyncHandler(async (req, res) => {
+  let book;
+  try {
+    book = await Book.findByPk(req.params.id);
+    if (book) {
+      await book.update(req.body);
+      res.redirect('/books');
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (error) {
+    if(error.name === "SequelizeValidationError") { // checking the error
+      book = await Book.build(req.body)
+      res.render('update-book', { book, errors: error.errors })
+    } else {
+      throw error; // error caught in the asyncHandler's catch block
+    }  
+  }
+}));
+
+// Deletes a book.
+app.post('/books/:id/delete', asyncHandler(async (req, res) => {
+  const book = await Book.findByPk(req.params.id);
+
+  if (book) {
+    await book.destroy();
+    res.redirect('/books');
+  } else {
+    res.sendStatus(404);
+  }
+}));
 
 app.get('/json', async (req, res) => {
   const books = await Book.findAll();
