@@ -25,21 +25,26 @@ app.use(express.static(path.join(__dirname, 'public')));
 // set static server
 app.use('/static', express.static('public'));
 
-// app.use('/', indexRouter);
-// app.use('/users', usersRouter);
-
-app.get('/', async (req, res) => {
-  const books = await Book.findAll();
-  res.json(books);
+// redirects HOME to /books
+app.get('/',(req, res) => {
+  res.redirect('/books');
 });
 
-app.get('/'); // Home route should redirect to the /books route
-app.get('/books'); // Shows the full list of books
+// Shows the full list of books
+app.get('/books', (req, res) => {
+  res.render('index');
+}); 
+
 app.get('/books/new'); // Shows the create new book form
 app.post('books/new');  // Posts a new book to the database
 app.get('books/:id'); // Shows book detail form
 app.post('books/:id'); // Updates book info in the database
-post.post('books/:id/delete');  // Deletes a book. Careful, this can’t be undone. It can be helpful to create a new “test” book to test deleting.
+app.post('books/:id/delete');  // Deletes a book. Careful, this can’t be undone. It can be helpful to create a new “test” book to test deleting.
+
+app.get('/json', async (req, res) => {
+  const books = await Book.findAll();
+  res.json(books);
+});
 
 
 // catch 404 and forward to error handler
@@ -54,7 +59,7 @@ app.use(function(err, req, res, next) {
     // return res.render('page-not-found', { err });
   } else {
     err.status = 500;
-    err.message = 'There was an error on the server';
+    // err.message = 'There was an error on the server';
     console.log(`${err.status}: ${err.message}`);
     // return res.render('error', { err });
   }
