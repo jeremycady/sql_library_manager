@@ -18,8 +18,7 @@ function asyncHandler(cb){
     try {
       await cb(req, res, next)
     } catch(error) {
-      console.log(error);
-      res.status(500).render('error', { errors: error});
+      next(error);
     }
   }
 }
@@ -128,7 +127,7 @@ app.use(function(err, req, res, next) {
     res.status(404).render('page-not-found');
   } else {
     console.log('Error not working');
-    res.status(505).render('error', { error: err });
+    res.status(505).render('error', { errors: err });
   }
 });
 
