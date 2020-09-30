@@ -6,21 +6,16 @@ var logger = require('morgan');
 const pug = require('pug');
 const { sequelize, Book } = require('./models');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-const { post } = require('./routes/index');
-
 var app = express();
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
+// app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // set static server
 app.use('/static', express.static('public'));
@@ -47,8 +42,26 @@ app.get('/books', asyncHandler(async (req, res) => {
   res.render('index', { books });
 })); 
 
-app.get('/books/new'); // Shows the create new book form
-app.post('/books/new');  // Posts a new book to the database
+// Shows the create new book form
+app.get('/books/new', (req, res) => {
+  res.render('new-book');
+}); 
+
+// Posts a new book to the database
+app.post('/books/new', asyncHandler(async (req, res) => {
+  let book;
+  try {
+    book = await Book.create(req.body)
+    res.redirect('/books');
+  } catch (error) {
+    if(error.name === "SequelizeValidationError") { // checking the error
+      book = await Book.build(req.body)
+      res.render('new-book', { book, errors: error.errors })
+    } else {
+      throw error; // error caught in the asyncHandler's catch block
+    }  
+  }
+}));  
 
 // Shows book detail form
 app.get('/books/:id', asyncHandler( async (req, res) => {

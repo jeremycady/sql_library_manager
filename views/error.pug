@@ -1,6 +1,6 @@
-extends layout
-
-block content
-  h1= message
-  h2= error.status
-  pre #{error.stack}
+if(errors)
+  h2.error Oops an error occurred!
+  ul.error
+    each error in errors
+      li
+        =error.message
