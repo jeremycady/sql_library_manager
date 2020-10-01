@@ -101,18 +101,25 @@ routes.post('/books/isbn', asyncHandler(async (req, res) => {
   const fetchBook = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${req.body.isbn}`);
   const json = await fetchBook.json();
   
-  const title = json.items[0].volumeInfo.title;
-  const author = json.items[0].volumeInfo.authors[0];
-  const genre = json.items[0].volumeInfo.categories[0];
-  const year = json.items[0].volumeInfo.publishedDate;
+  if (json.totalItems === 0) {
+    res.redirect('/books/new?isbn=false');
+  } else {
+    const title = json.items[0].volumeInfo.title;
+    const author = json.items[0].volumeInfo.authors[0];
+    const genre = json.items[0].volumeInfo.categories[0];
+    const year = json.items[0].volumeInfo.publishedDate;
 
-  res.redirect(`/books/new/?title=${title}&author=${author}&genre=${genre}&year=${year}`);
+    res.redirect(`/books/new?title=${title}&author=${author}&genre=${genre}&year=${year}`);
+  }
 
 }));
 
 // Shows the create new book form
 routes.get('/books/new', (req, res) => {
-  if (req.query.title === undefined) {
+  if (req.query.isbn === 'false') {
+    const errors = { error: {message: 'ISBN returned no results'}}
+    res.render('new-book', { errors });
+  } else if (req.query.title === undefined) {
     res.render('new-book');
   } else {
     let book = {};
@@ -142,18 +149,20 @@ routes.post('/books/new', asyncHandler(async (req, res) => {
 }));  
 
 // Shows book detail form
-routes.get('/books/:id', asyncHandler( async (req, res) => {
+routes.get('/books/:id', asyncHandler( async (req, res, next) => {
   const book = await Book.findByPk(req.params.id);
 
   if (book) {
     res.render('update-book', { book });
   } else {
-    res.sendStatus(404);
+    const err = new Error('Page not Found');
+    err.status = 404;
+    return next(err);
   }
 })); 
 
 // Updates book info in the database
-routes.post('/books/:id', asyncHandler(async (req, res) => {
+routes.post('/books/:id', asyncHandler(async (req, res, next) => {
   let book;
   try {
     book = await Book.findByPk(req.params.id);
@@ -161,7 +170,9 @@ routes.post('/books/:id', asyncHandler(async (req, res) => {
       await book.update(req.body);
       res.redirect('/books');
     } else {
-      res.sendStatus(404);
+      const err = new Error('Page not Found');
+      err.status = 404;
+      next(err);
     }
   } catch (error) {
     if(error.name === "SequelizeValidationError") { // checking the error
@@ -174,14 +185,16 @@ routes.post('/books/:id', asyncHandler(async (req, res) => {
 }));
 
 // Deletes a book
-routes.post('/books/:id/delete', asyncHandler(async (req, res) => {
+routes.post('/books/:id/delete', asyncHandler(async (req, res, next) => {
   const book = await Book.findByPk(req.params.id);
 
   if (book) {
     await book.destroy();
     res.redirect('/books');
   } else {
-    res.sendStatus(404);
+    const err = new Error('Page not Found');
+    err.status = 404;
+    next(err);
   }
 }));
 
