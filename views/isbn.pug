@@ -8,10 +8,10 @@ block content
   form(method='post')
     p
       label(for='isbn') ISBN
-      input(name='isbn' type='text')
-    p
-      input(type='submit' value='Create New Book')
-    p
+      input.isbn(name='isbn', type='number')
+    p.padding
+      input.submit(type='submit', value='Create New Book')
+    p.padding
       a.button(href='/books/new') Don't have ISBN
-    p
+    p.padding
       a.button(href='/books') Cancel

@@ -1,6 +1,8 @@
 body {
   padding: 10px 50px 50px;
   font: 18px "Garamond", serif;
+  width: 800px;
+  margin: auto;
 }
 
 a {
@@ -29,8 +31,17 @@ form a.button, input[type=submit] {
   transition: 0.4s;
 }
 
+p.padding {
+  margin-top: 30px;
+  margin-bottom: 0;
+}
+
 input[type=submit] {
   border: 0;
+}
+
+input[type=submit]:disabled {
+  opacity: .50;
 }
 
   a.button:hover, input[type=submit]:hover {
