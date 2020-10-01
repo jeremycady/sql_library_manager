@@ -27,8 +27,11 @@ routes.get('/', (req, res) => {
 
 // Shows the full list of books
 routes.get('/books', asyncHandler(async (req, res) => {
+  let search = {};
+
+  // sets the query for book data retrieval
   if (req.query.search) {
-    const books = await Book.findAll({
+    search = {
       where: {
         [Op.or]: {
           title: { [Op.like]: `%${req.query.search}%`},
@@ -37,56 +40,34 @@ routes.get('/books', asyncHandler(async (req, res) => {
           year: { [Op.like]: `%${req.query.search}%`},
         }
       }
-    });
-
-    // add pagination to the books page
-    await Book.findAndCountAll({
-      where: {
-        [Op.or]: {
-          title: { [Op.like]: `%${req.body}%`},
-          author: { [Op.like]: `%${req.body}%`},
-          genre: { [Op.like]: `%${req.body}%`},
-          year: { [Op.like]: `%${req.body}%`},
-        }
-      },
-      limit: req.query.limit, 
-      offset: req.skip})
-      .then(results => {
-        const itemCount = results.count;
-        const pageCount = Math.ceil(results.count / req.query.limit);
-        const offset = req.skip
-        const limit = req.query.page * req.query.limit;
-        res.render('index', {
-          books,
-          pageCount,
-          itemCount,
-          offset,
-          limit,
-          pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        });
-      }).catch(err => next(err));
-  } else {
-    const books = await Book.findAll();
-
-    // add pagination to the books page
-    await Book.findAndCountAll({limit: req.query.limit, offset: req.skip})
-      .then(results => {
-        const itemCount = results.count;
-        const pageCount = Math.ceil(results.count / req.query.limit);
-        const offset = req.skip
-        const limit = req.query.page * req.query.limit;
-        res.render('index', {
-          books,
-          pageCount,
-          itemCount,
-          offset,
-          limit,
-          pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
-        });
-      }).catch(err => next(err));
+    };
   }
+
+  // retrieve all books meeting search
+  const books = await Book.findAll(search);
+
+  // provide data for pagination
+  await Book.findAndCountAll({
+    search,
+    limit: req.query.limit, 
+    offset: req.skip})
+    .then(results => {
+      const itemCount = results.count;
+      const pageCount = Math.ceil(results.count / req.query.limit);
+      const offset = req.skip
+      const limit = req.query.page * req.query.limit;
+      res.render('index', {
+        books,
+        pageCount,
+        itemCount,
+        offset,
+        limit,
+        pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+      });
+    }).catch(err => next(err));
 })); 
 
+// posts search query back to /books
 routes.post('/books', asyncHandler(async (req, res) => {
   res.redirect(`/books/?search=${req.body}`);
 }));
@@ -96,11 +77,13 @@ routes.get('/books/isbn', (req, res) => {
   res.render('isbn');
 }); 
 
+// fetches book data from Google Books API
 routes.post('/books/isbn', asyncHandler(async (req, res) => {
 
   const fetchBook = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${req.body.isbn}`);
   const json = await fetchBook.json();
   
+  // conditional on whether fetch returns no results from Google
   if (json.totalItems === 0) {
     res.redirect('/books/new?isbn=false');
   } else {
@@ -111,11 +94,11 @@ routes.post('/books/isbn', asyncHandler(async (req, res) => {
 
     res.redirect(`/books/new?title=${title}&author=${author}&genre=${genre}&year=${year}`);
   }
-
 }));
 
 // Shows the create new book form
 routes.get('/books/new', (req, res) => {
+  // if no books returned from Google feeds empty form, otherwise fills form with retreived data
   if (req.query.isbn === 'false') {
     const errors = { error: {message: 'ISBN returned no results'}}
     res.render('new-book', { errors });
@@ -208,16 +191,17 @@ routes.get('/error', (req, res) => {
   throw err;
 });
 
+// gets json from database
 routes.get('/json', async (req, res) => {
   const books = await Book.findAll();
   res.json(books);
 });
 
+// 404 error catch
 routes.use((req, res, next) => {
   const err = new Error('Page not Found');
   err.status = 404;
   next(err);
 });
-
 
 module.exports = routes;
