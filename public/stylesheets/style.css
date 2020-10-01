@@ -95,3 +95,17 @@ input[type=text] {
 .error {
   color: rgb(236, 15, 15);
 }
+
+a.btn.btn-default, 
+.pager a.next,
+.pager a.prev {
+  color: #019875;
+  border-color: #019875;
+}
+
+a.btn.btn-default:hover, 
+.pager a.next:hover,
+.pager a.prev:hover {
+  color: white;
+  background-color: #019875;
+}
