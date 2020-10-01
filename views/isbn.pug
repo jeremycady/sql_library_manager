@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  h1 New Book
+  
+  include validate-error
+
+  form(method='post')
+    p
+      label(for='isbn') ISBN
+      input(name='isbn' type='text')
+    p
+      input(type='submit' value='Create New Book')
+    p
+      a.button(href='/books/new') Don't have ISBN
+    p
+      a.button(href='/books') Cancel

@@ -1,5 +1,6 @@
 const express = require('express');
 const { sequelize, Book } = require('./models');
+const fetch = require('node-fetch');
 
 const app = express();
 
@@ -35,9 +36,39 @@ app.get('/books', asyncHandler(async (req, res) => {
   res.render('index', { books });
 })); 
 
+// Shows the isbn new book form
+app.get('/books/isbn', (req, res) => {
+  res.render('isbn');
+}); 
+
+app.post('/books/isbn', asyncHandler(async (req, res) => {
+
+  const fetchBook = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${req.body.isbn}`);
+  const json = await fetchBook.json();
+  
+  const title = json.items[0].volumeInfo.title;
+  const author = json.items[0].volumeInfo.authors[0];
+  const genre = json.items[0].volumeInfo.categories[0];
+  const year = json.items[0].volumeInfo.publishedDate;
+  console.log(title);
+
+  res.redirect(`/books/new/?title=${title}&author=${author}&genre=${genre}&year=${year}`);
+
+}));
+
 // Shows the create new book form
 app.get('/books/new', (req, res) => {
-  res.render('new-book');
+  if (Object.keys(req.query).length === 0) {
+    res.render('new-book');
+  } else {
+    let book = {};
+    book.title = req.query.title;
+    book.author = req.query.author;
+    book.genre = req.query.genre;
+    book.year = req.query.year;
+
+    res.render('new-book', { book });
+  }
 }); 
 
 // Posts a new book to the database
@@ -130,5 +161,17 @@ app.use(function(err, req, res, next) {
     res.status(505).render('error', { errors: err });
   }
 });
+
+// (async () => {
+// 	const response = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:9780143126560");
+//   const json = await response.json();
+//   let book = {};
+//   book.title = json.items[0].volumeInfo.title;
+//   book.author = json.items[0].volumeInfo.authors[0];
+//   book.genre = json.items[0].volumeInfo.categories[0];
+//   book.year = json.items[0].volumeInfo.publishedDate;
+
+//   console.log(book);
+// })();
 
 module.exports = app;
