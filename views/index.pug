@@ -12,10 +12,13 @@ block content
         th Genre
         th Year
     tbody
-      each book in books
-        tr
-          td 
-            a(href=`/books/${book.id}`)= book.title
-          td= book.author
-          td= book.genre
-          td= book.year
+      each book, index in books
+        if index >= offset && index < limit
+          tr
+            td 
+              a(href=`/books/${book.id}`)= book.title
+            td= book.author
+            td= book.genre
+            td= book.year
+
+  include _paginate

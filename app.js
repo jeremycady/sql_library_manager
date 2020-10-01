@@ -1,6 +1,7 @@
 const express = require('express');
 const { sequelize, Book } = require('./models');
 const fetch = require('node-fetch');
+const paginate = require('express-paginate');
 
 const app = express();
 
@@ -12,6 +13,9 @@ app.use(express.urlencoded({ extended: false }));
 
 // set static server
 app.use('/static', express.static('public'));
+
+// adds pagination middleware and limits
+app.use(paginate.middleware(10, 50));
 
 /* Handler function to wrap each route. */
 function asyncHandler(cb){
@@ -32,8 +36,23 @@ app.get('/', (req, res) => {
 // Shows the full list of books
 app.get('/books', asyncHandler(async (req, res) => {
   const books = await Book.findAll();
-  
-  res.render('index', { books });
+
+  // add pagination to the books page
+  await Book.findAndCountAll({limit: req.query.limit, offset: req.skip})
+    .then(results => {
+      const itemCount = results.count;
+      const pageCount = Math.ceil(results.count / req.query.limit);
+      const offset = req.skip
+      const limit = req.query.page * req.query.limit;
+      res.render('index', {
+        books,
+        pageCount,
+        itemCount,
+        offset,
+        limit,
+        pages: paginate.getArrayPages(req)(3, pageCount, req.query.page)
+      });
+    }).catch(err => next(err));
 })); 
 
 // Shows the isbn new book form
@@ -50,7 +69,6 @@ app.post('/books/isbn', asyncHandler(async (req, res) => {
   const author = json.items[0].volumeInfo.authors[0];
   const genre = json.items[0].volumeInfo.categories[0];
   const year = json.items[0].volumeInfo.publishedDate;
-  console.log(title);
 
   res.redirect(`/books/new/?title=${title}&author=${author}&genre=${genre}&year=${year}`);
 
@@ -161,17 +179,5 @@ app.use(function(err, req, res, next) {
     res.status(505).render('error', { errors: err });
   }
 });
-
-// (async () => {
-// 	const response = await fetch("https://www.googleapis.com/books/v1/volumes?q=isbn:9780143126560");
-//   const json = await response.json();
-//   let book = {};
-//   book.title = json.items[0].volumeInfo.title;
-//   book.author = json.items[0].volumeInfo.authors[0];
-//   book.genre = json.items[0].volumeInfo.categories[0];
-//   book.year = json.items[0].volumeInfo.publishedDate;
-
-//   console.log(book);
-// })();
 
 module.exports = app;
